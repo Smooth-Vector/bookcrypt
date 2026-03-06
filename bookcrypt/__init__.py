@@ -1,6 +1,6 @@
 from bookcrypt.parser import extract_words, tokenize
 from bookcrypt.indexer import build_index, paginate
-from bookcrypt.encoder import build_position_index, encode
+from bookcrypt.encoder import build_position_index, encode, decode, format_encoded
 
 __all__ = [
     "extract_words",
@@ -9,4 +9,6 @@ __all__ = [
     "build_index",
     "build_position_index",
     "encode",
+    "decode",
+    "format_encoded",
 ]

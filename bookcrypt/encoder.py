@@ -104,3 +104,51 @@ def format_encoded(coords: list[Coordinate]) -> str:
         Human-readable encoding string, e.g. ``"4 34 7 12 1 5"``.
     """
     return " ".join(f"{page} {pos}" for page, pos in coords)
+
+def decode(encoded: str, pages: list[list[str]]) -> str:
+    """Decode an encoded coordinate string back into a sentence.
+
+    Parses pairs of numbers from ``encoded`` and looks up the word at each
+    ``(page, position)`` coordinate in ``pages``.
+
+    Args:
+        encoded: Space-separated coordinate string as produced by
+            ``format_encoded``, e.g. ``"15 76 6 215 18 44"``.
+        pages: List of pages as returned by ``paginate``.
+
+    Returns:
+        Decoded sentence as a space-separated string of words.
+
+    Raises:
+        ValueError: If ``encoded`` contains an odd number of tokens, or if any
+            coordinate is out of range for the given pages.
+
+    Example::
+
+        pages = paginate(extract_words("moby_dick.epub"))
+        index = build_position_index(pages)
+        coords = encode("call me ishmael", index)
+        sentence = decode(format_encoded(coords), pages)
+        assert sentence == "call me ishmael"
+    """
+    tokens = encoded.split()
+    if len(tokens) % 2 != 0:
+        raise ValueError(f"Encoded string must contain an even number of tokens, got {len(tokens)}")
+
+    words: list[str] = []
+    for i in range(0, len(tokens), 2):
+        try:
+            page = int(tokens[i])
+            pos = int(tokens[i + 1])
+        except ValueError:
+            raise ValueError(f"Invalid coordinate at token {i}: '{tokens[i]} {tokens[i + 1]}'")
+
+        if page < 1 or page > len(pages):
+            raise ValueError(f"Page {page} out of range (book has {len(pages)} pages)")
+        page_words = pages[page - 1]
+        if pos < 1 or pos > len(page_words):
+            raise ValueError(f"Position {pos} out of range on page {page} ({len(page_words)} words)")
+
+        words.append(page_words[pos - 1])
+
+    return " ".join(words)

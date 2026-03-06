@@ -2,7 +2,7 @@
 
 import pytest
 
-from bookcrypt.encoder import build_position_index, encode, format_encoded
+from bookcrypt.encoder import build_position_index, decode, encode, format_encoded
 from bookcrypt.indexer import paginate
 from bookcrypt.parser import extract_words
 
@@ -155,3 +155,53 @@ class TestIntegrationRealBook:
     def test_unknown_word_raises(self, book_index):
         with pytest.raises(ValueError):
             encode("supercalifragilistic", book_index)
+
+# ---------------------------------------------------------------------------
+# decode
+# ---------------------------------------------------------------------------
+
+class TestDecode:
+    def test_decodes_single_word(self, simple_pages):
+        assert decode("1 3", simple_pages) == "ishmael"
+
+    def test_decodes_multiple_words(self, simple_pages):
+        assert decode("1 1 1 2 1 3", simple_pages) == "call me ishmael"
+
+    def test_empty_string(self, simple_pages):
+        assert decode("", simple_pages) == ""
+
+    def test_odd_token_count_raises(self, simple_pages):
+        with pytest.raises(ValueError, match="even number"):
+            decode("1 2 3", simple_pages)
+
+    def test_page_out_of_range_raises(self, simple_pages):
+        with pytest.raises(ValueError, match="out of range"):
+            decode("99 1", simple_pages)
+
+    def test_position_out_of_range_raises(self, simple_pages):
+        with pytest.raises(ValueError, match="out of range"):
+            decode("1 99", simple_pages)
+
+    def test_invalid_token_raises(self, simple_pages):
+        with pytest.raises(ValueError, match="Invalid coordinate"):
+            decode("one two", simple_pages)
+
+    def test_roundtrip(self, simple_pages):
+        index = build_position_index(simple_pages)
+        sentence = "call me ishmael"
+        coords = encode(sentence, index)
+        decoded = decode(format_encoded(coords), simple_pages)
+        assert decoded == sentence
+
+
+class TestDecodeIntegrationRealBook:
+    @pytest.fixture(scope="class")
+    def book_pages(self):
+        words = extract_words("moby_dick.epub")
+        return paginate(words, page_size=250)
+
+    def test_roundtrip_real_book(self, book_pages):
+        index = build_position_index(book_pages)
+        sentence = "call me ishmael"
+        encoded = format_encoded(encode(sentence, index))
+        assert decode(encoded, book_pages) == sentence
