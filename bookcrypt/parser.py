@@ -17,6 +17,18 @@ _PG_END = re.compile(r"\*{3}\s*END OF THE PROJECT GUTENBERG EBOOK[^*]+\*{3}", re
 _WORD_RE = re.compile(r"[A-Za-z''\-]+")
 
 
+def tokenize(text: str) -> list[str]:
+    """Split text into lowercase word tokens, keeping apostrophes and hyphens.
+
+    Args:
+        text: Raw text string.
+
+    Returns:
+        Ordered list of lowercase word strings.
+    """
+    return [m.group().lower() for m in _WORD_RE.finditer(text)]
+
+
 def _opf_path(epub: zipfile.ZipFile) -> str:
     """Return the path of the OPF package document from container.xml."""
     container = epub.read("META-INF/container.xml")
@@ -100,4 +112,4 @@ def extract_words(epub_path: str) -> list[str]:
 
     full_text = " ".join(chunks)
     full_text = _strip_boilerplate(full_text)
-    return [m.group().lower() for m in _WORD_RE.finditer(full_text)]
+    return tokenize(full_text)
