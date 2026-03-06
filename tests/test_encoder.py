@@ -74,6 +74,21 @@ class TestEncode:
         result = encode("call", position_index)
         assert result == [(1, 1)]
 
+    def test_repeated_word_uses_successive_occurrences(self, position_index):
+        # "call" is at (1,1) and (3,1); two uses should consume both in order
+        result = encode("call call", position_index)
+        assert result == [(1, 1), (3, 1)]
+
+    def test_exhausted_word_raises(self, position_index):
+        # "ishmael" appears only once
+        with pytest.raises(ValueError, match="exhausted"):
+            encode("ishmael ishmael", position_index)
+
+    def test_does_not_mutate_index(self, position_index):
+        original = {w: list(coords) for w, coords in position_index.items()}
+        encode("call me ishmael", position_index)
+        assert position_index == original
+
     def test_case_insensitive(self, position_index):
         assert encode("ISHMAEL", position_index) == encode("ishmael", position_index)
 

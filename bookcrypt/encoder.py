@@ -35,19 +35,23 @@ def build_position_index(pages: list[list[str]]) -> dict[str, list[Coordinate]]:
 def encode(sentence: str, position_index: dict[str, list[Coordinate]]) -> list[Coordinate]:
     """Encode a sentence as a list of book coordinates.
 
-    Each word in the sentence is mapped to its first occurrence in the book as
-    a ``(page, position)`` coordinate. Words are normalised the same way as the
-    parser (lowercase, keeping apostrophes and hyphens).
+    Each word in the sentence is mapped to its next unused occurrence in the
+    book as a ``(page, position)`` coordinate. Each coordinate is consumed
+    exactly once — repeated words in the sentence draw from successive
+    occurrences in the book. Words are normalised the same way as the parser
+    (lowercase, keeping apostrophes and hyphens).
 
     Args:
         sentence: Plain-text sentence to encode.
-        position_index: Index built by ``build_position_index``.
+        position_index: Index built by ``build_position_index``. This mapping
+            is not mutated; a local iterator is used per call.
 
     Returns:
         List of ``(page, position)`` tuples, one per word token in the sentence.
 
     Raises:
-        ValueError: If any word in the sentence does not appear in the book.
+        ValueError: If any word in the sentence does not appear in the book, or
+            if a word has been used more times than it appears in the book.
 
     Example::
 
@@ -62,17 +66,28 @@ def encode(sentence: str, position_index: dict[str, list[Coordinate]]) -> list[C
     if not words:
         return []
 
+    # Per-call iterator over each word's occurrences — does not mutate the index
+    iterators: dict[str, int] = {}
     result: list[Coordinate] = []
-    missing: list[str] = []
+    errors: list[str] = []
 
     for word in words:
         if word not in position_index:
-            missing.append(word)
-        else:
-            result.append(position_index[word][0])
+            errors.append(f"'{word}' not found in book")
+            continue
 
-    if missing:
-        raise ValueError(f"Word(s) not found in book: {', '.join(repr(w) for w in missing)}")
+        idx = iterators.get(word, 0)
+        occurrences = position_index[word]
+
+        if idx >= len(occurrences):
+            errors.append(f"'{word}' exhausted (appears {len(occurrences)} time(s) in book)")
+            continue
+
+        result.append(occurrences[idx])
+        iterators[word] = idx + 1
+
+    if errors:
+        raise ValueError(f"Encoding failed: {'; '.join(errors)}")
 
     return result
 
