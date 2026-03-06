@@ -80,13 +80,12 @@ def encode(sentence: str, position_index: dict[str, list[Coordinate]]) -> list[C
 def format_encoded(coords: list[Coordinate]) -> str:
     """Format a list of coordinates as a space-separated string.
 
-    Each coordinate is rendered as ``page position`` with word boundaries
-    separated by ``|``.
+    Each coordinate is rendered as ``page position`` separated by a space.
 
     Args:
         coords: List of ``(page, position)`` tuples as returned by ``encode``.
 
     Returns:
-        Human-readable encoding string, e.g. ``"4 34|7 12|1 5"``.
+        Human-readable encoding string, e.g. ``"4 34 7 12 1 5"``.
     """
-    return "|".join(f"{page} {pos}" for page, pos in coords)
+    return " ".join(f"{page} {pos}" for page, pos in coords)

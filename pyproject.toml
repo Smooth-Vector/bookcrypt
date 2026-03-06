@@ -12,6 +12,9 @@ dependencies = [
     "lxml>=5.0",
 ]
 
+[project.scripts]
+bookcrypt = "bookcrypt.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",

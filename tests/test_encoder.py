@@ -107,7 +107,7 @@ class TestFormatEncoded:
         assert format_encoded([(4, 34)]) == "4 34"
 
     def test_multiple_coords(self):
-        assert format_encoded([(4, 34), (7, 12), (1, 5)]) == "4 34|7 12|1 5"
+        assert format_encoded([(4, 34), (7, 12), (1, 5)]) == "4 34 7 12 1 5"
 
     def test_empty(self):
         assert format_encoded([]) == ""
@@ -132,12 +132,10 @@ class TestIntegrationRealBook:
     def test_format_output(self, book_index):
         coords = encode("the whale", book_index)
         encoded = format_encoded(coords)
-        parts = encoded.split("|")
-        assert len(parts) == 2
-        for part in parts:
-            page, pos = part.split()
-            assert int(page) >= 1
-            assert int(pos) >= 1
+        # "the whale" -> "p1 pos1 p2 pos2"
+        parts = encoded.split()
+        assert len(parts) == 4
+        assert all(int(p) >= 1 for p in parts)
 
     def test_unknown_word_raises(self, book_index):
         with pytest.raises(ValueError):
