@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+bookcrypt/__init__.py
+bookcrypt/indexer.py
+bookcrypt/parser.py
+bookcrypt.egg-info/PKG-INFO
+bookcrypt.egg-info/SOURCES.txt
+bookcrypt.egg-info/dependency_links.txt
+bookcrypt.egg-info/requires.txt
+bookcrypt.egg-info/top_level.txt
+tests/test_indexer.py
+tests/test_parser.py
